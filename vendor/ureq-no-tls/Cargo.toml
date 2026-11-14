@@ -1,0 +1,21 @@
+[package]
+name = "ureq"
+version = "3.5.2"
+edition = "2021"
+description = "Stub local de ureq 3.x sin TLS para compilar craft-font-store en Android NDK/PRoot (ring no compila ahi)"
+license = "MIT OR Apache-2.0"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = []
+rustls = []
+rustls-no-provider = []
+_tls = []
+_rustls = []
+_ring = []
+gzip = []
+json = []
+charset = []
+native-tls = []

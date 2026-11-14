@@ -21,7 +21,9 @@ serde_json = "1"
 rusqlite = { version = "0.40", features = ["bundled"] }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
+# ureq viene de craft-font-store; desactivamos sus defaults para que no fuerce rustls/ring
+ureq = { version = "3", default-features = false }
 aes-gcm = "0.10"
 sha2 = "0.10"
 rand = { version = "0.9", features = ["os_rng"] }
@@ -37,4 +39,8 @@ unsafe_code = "forbid"
 # Fix PRoot/build: krilla 0.8.2 de crates.io no tiene los campos que craft-pdf espera.
 # Usamos el krilla vendored ( parcheado) de storytold/craft-libs rev 6e03f65.
 [patch.crates-io]
+# ureq (forzado por craft-font-store con rustls+ring) no compila en Android NDK/PRoot.
+# Usamos un clon local de ureq 3.x sin la feature rustls (solo HTTP, válido para 127.0.0.1).
+ureq = { path = "vendor/ureq-no-tls" }
 krilla = { git = "https://github.com/storytold/craft-libs", rev = "6e03f65bf45181db77ba6229716e6624db9eb25b" }
+

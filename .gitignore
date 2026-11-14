@@ -1,1 +1,6 @@
 /target
+/app/.dart_tool/
+/app/.flutter-plugins
+/app/.flutter-plugins-dependencies
+/rust/target/
+*.l2s.*

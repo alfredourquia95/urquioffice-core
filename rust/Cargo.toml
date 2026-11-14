@@ -1,0 +1,20 @@
+[package]
+name = "rust_lib_urquioffice"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+urquioffice-core = { path = ".." }
+serde_json = "1"
+
+# Mismo patch que el crate raíz: krilla vendored de craft-libs (el de crates.io no compila con craft-pdf)
+# y ureq stub sin TLS (ring no compila con el NDK en PRoot; craft-font-store fuerza ureq+rustls+ring)
+[patch.crates-io]
+ureq = { path = "../vendor/ureq-no-tls" }
+krilla = { git = "https://github.com/storytold/craft-libs", rev = "6e03f65bf45181db77ba6229716e6624db9eb25b" }
+
+[workspace]

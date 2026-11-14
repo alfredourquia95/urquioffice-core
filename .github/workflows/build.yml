@@ -1,0 +1,105 @@
+name: Build APK UrquiOffice (Rust + Flutter)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    env:
+      FLUTTER_VERSION: "3.47.9"
+      NDK_VERSION: "28.2.13676358"
+      RUST_TOOLCHAIN: "stable"
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar dependencias del sistema (Java 17, unzip, curl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk-headless unzip curl git clang cmake ninja-build pkg-config libgtk-3-dev
+          sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+
+      - name: Instalar Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Aceptar licencias de Android y preparar SDK
+        run: |
+          yes | flutter doctor --android-licenses || true
+          flutter config --no-analytics
+          flutter precache --android
+
+      - name: Instalar Android SDK (cmdline-tools, platform 36, build-tools, NDK)
+        run: |
+          SDK=/opt/android-sdk
+          mkdir -p $SDK/cmdline-tools
+          curl -sSL -o /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q /tmp/cmdtools.zip -d $SDK/cmdline-tools
+          mv $SDK/cmdline-tools/cmdline-tools $SDK/cmdline-tools/latest
+          export ANDROID_HOME=$SDK
+          export PATH=$PATH:$SDK/cmdline-tools/latest/bin
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;${{ env.NDK_VERSION }}"
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "$SDK" > /workspace/urquioffice-core/app/android/local.properties.tmp
+          printf 'sdk.dir=%s\n' "$SDK" > app/android/local.properties
+
+      - name: Instalar Rust y target aarch64-linux-android
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Compilar la librería Rust (cdylib) para Android ARM64
+        working-directory: rust
+        env:
+          NDK_BIN: /opt/android-sdk/ndk/${{ env.NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/bin
+          NDK_SYSROOT: /opt/android-sdk/ndk/${{ env.NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+          CC_aarch64_linux_android: /opt/android-sdk/ndk/${{ env.NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang --sysroot=/opt/android-sdk/ndk/${{ env.NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: /opt/android-sdk/ndk/${{ env.NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android31-clang
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          cargo build --target aarch64-linux-android --profile dev -j 2
+          ls -la target/aarch64-linux-android/debug/librust_lib_urquioffice.so
+
+      - name: Verificar que el .so existe antes de empaquetar
+        run: |
+          test -f rust/target/aarch64-linux-android/debug/librust_lib_urquioffice.so
+          mkdir -p app/android/app/src/main/jniLibs/arm64-v8a
+          cp rust/target/aarch64-linux-android/debug/librust_lib_urquioffice.so app/android/app/src/main/jniLibs/arm64-v8a/
+
+      - name: Obtener dependencias de Flutter
+        working-directory: app
+        run: flutter pub get
+
+      - name: Generar bindings de flutter_rust_bridge (por si cambian)
+        working-directory: app
+        run: |
+          dart pub global activate flutter_rust_bridge_codegen 2.13.0 || true
+          dart pub global run flutter_rust_bridge_codegen generate --config-file ../flutter_rust_bridge.yaml || true
+
+      - name: Compilar APK debug
+        working-directory: app
+        run: flutter build apk --debug
+
+      - name: Verificar que el APK contiene el .so de Rust
+        run: |
+          APK=app/build/app/outputs/flutter-apk/app-debug.apk
+          ls -la "$APK"
+          unzip -l "$APK" | grep "lib/arm64-v8a/librust_lib_urquioffice.so"
+
+      - name: Subir APK como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: urquioffice-app-debug-arm64
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
