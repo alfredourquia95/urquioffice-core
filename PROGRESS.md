@@ -59,3 +59,9 @@
 - `app/lib/widgets/document_canvas.dart`: CustomPainter dibuja hoja A4 blanca con sombra + texto estatico de prueba.
 - `app/lib/widgets/side_panel_ia.dart`: panel derecho 300px con chat mock, campo de texto y boton enviar (sin logica real).
 - `flutter analyze`: 0 issues.
+
+## Fase 3 CI - fix #2 (commit pusheado 14:52Z)
+- Fallo CI: cc-rs no encontraba "aarch64-linux-android-ar" (NDK 28 solo trae llvm-ar).
+- Fix: AR_aarch64_linux_android=llvm-ar y RANLIB=llvm-ranlib en build.yml.
+- Fix FFI: main.dart usa ExternalLibrary.process(iKnowHowToUseIt: true) para cargar librust_lib_urquioffice.so desde jniLibs/arm64-v8a del APK.
+- Verificaciones swarm: Fase 4 UI cumple blueprint 4.1-4.4 (analyze 0 issues); FFI OK (6/6 tests, sin panic/unsafe); tablet TAB-T126-8 Android 15 SDK35 arm64-v8a con 24G libres y app ya instalada (versionCode 1).
