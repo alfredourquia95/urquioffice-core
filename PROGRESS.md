@@ -46,3 +46,9 @@
 3. Si cargo falla por PRoot: limpiar `*.l2s.*` de `/home/jcode/.cargo/git` (ver historial arriba).
 4. Tras cada sub-fase: actualizar este archivo, `git commit` y (si hay red) `git push`.
 5. `git-fetch-with-cli = true` añadido a `/home/jcode/.cargo/config.toml` para evitar el bug de libgit2 en PRoot.
+
+## Fase 3 (parcial) - CI/CD en GitHub Actions (commit 0b72a98)
+- Build local aarch64-linux-android bloqueado por PRoot (NDK x86_64 no ejecuta en ARM64).
+- `.github/workflows/build.yml`: ubuntu-24.04 + Flutter 3.47.9 + NDK 28.2.13676358 + Rust stable.
+- Compila `librust_lib_urquioffice.so`, lo mete en `jniLibs/arm64-v8a`, corre `flutter build apk --debug`, verifica el .so dentro del APK y sube artefacto `urquioffice-app-debug-arm64`.
+- Push a main dispara el workflow automaticamente.
