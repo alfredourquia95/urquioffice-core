@@ -89,3 +89,8 @@
 - LECCIONES_APRENDIDAS.md: problemas reales y soluciones (PRoot/NDK, cc-rs llvm-ar, extractNativeLibs, ExternalLibrary.process, parches ureq/krilla).
 - ESTADO_Y_FUNCIONA.md: qué funciona hoy, estructura del repo y comandos de despliegue.
 - AGENTS.md global en /root/.jcode/AGENTS.md + memoria persistente guardada.
+
+## FASE 4 COMPLETADA (17:01Z)
+- UI mock verificada: Ribbon (Inicio/Insertar/Diseno/IA) con hover, DocumentCanvas A4 con CustomPainter, SidePanelIA con chat mock, AppBar + atajos Ctrl+S/O/B/I/U, barra de estado con estado del nucleo Rust.
+- Criterio de éxito cumplido: se ve como editor moderno, responde a ratón/teclado, no edita nada real. flutter analyze 0 issues.
+- Inicio Fase 5: integración de comandos reales Rust<->Flutter.
