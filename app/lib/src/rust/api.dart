@@ -12,8 +12,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// Versión pública llamable desde Dart para mostrar el estado del motor.
 Future<String> estadoNucleo() => RustLib.instance.api.crateApiEstadoNucleo();
 
-/// Ejecuta un comando del engine de WordCraft por nombre (Fase 5).
-/// Por ahora solo devuelve eco hasta cablear la Session persistente.
+/// Ejecuta un comando del engine de WordCraft sobre la sesión global (Fase 5).
+/// Devuelve el resultado del comando como JSON en String.
 Future<String> executeCommand({
   required String commandName,
   required String args,
@@ -21,3 +21,7 @@ Future<String> executeCommand({
   commandName: commandName,
   args: args,
 );
+
+/// Devuelve la lista de dibujo actual como JSON: [{x, y, text, bold}, ...].
+/// Flutter la usa para repintar el DocumentCanvas.
+Future<String> obtenerDibujo() => RustLib.instance.api.crateApiObtenerDibujo();

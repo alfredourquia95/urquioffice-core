@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1653384421;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1073125156;
 
 // Section: executor
 
@@ -145,6 +145,38 @@ fn wire__crate__api__init_app_impl(
         },
     )
 }
+fn wire__crate__api__obtener_dibujo_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "obtener_dibujo",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::obtener_dibujo()?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 
 // Section: dart2rust
 
@@ -206,6 +238,7 @@ fn pde_ffi_dispatcher_primary_impl(
         1 => wire__crate__api__estado_nucleo_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__execute_command_impl(port, ptr, rust_vec_len, data_len),
         3 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__obtener_dibujo_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
