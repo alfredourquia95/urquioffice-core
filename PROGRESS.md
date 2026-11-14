@@ -72,3 +72,8 @@
 - PERO la app crashea al abrir: "Failed to lookup symbol 'frb_get_rust_content_hash' ... by process()".
 - Diagnóstico: el APK se generó con extractNativeLibs=false (AGP default targetSdk 36), así que Android NO extrajo los .so a /data/app/.../lib/arm64 (vacío) y DynamicLibrary.process() no los encuentra.
 - Fix pusheado: android:extractNativeLibs="true" en el manifest + packaging.jniLibs.useLegacyPackaging=true en build.gradle.kts. Nueva corrida 43609681589 in_progress.
+
+## Fase 3 CI - fix #4 (15:45Z) - loader de frb corregido
+- APK con extractNativeLibs=true instala y extrae bien el .so (lib/arm64/librust_lib_urquioffice.so presente), pero ExternalLibrary.process() busca frb_get_rust_content_hash en libflutter.so → undefined symbol.
+- Fix: volver a RustLib.init() sin argumentos: en Android frb hace DynamicLibrary.open('librust_lib_urquioffice.so') que el linker resuelve al nativeLibraryDir.
+- flutter analyze: 0 issues. Push disparó nueva corrida.
