@@ -104,3 +104,9 @@
 - DocumentCanvas editable: cada tecla envía text.insert/edit.backspace vía execute_command; repinta con obtener_dibujo() (JSON [{x,y,text,bold}]) usando CustomPainter+TextPainter con escala A4.
 - Ribbon cableado a comandos reales: format.bold/italic/underline, edit.undo/redo, align.left/center/right. Guardar/abrir pendientes de SAF (5.4).
 - flutter analyze 0 issues. Corrida CI 43636153182 en cola (compila .so + APK con el nuevo núcleo).
+
+## Fase 5 - verificación en tablet (23:09Z) - HALLAZGO IMPORTANTE
+- APK Fase 5 (corrida 43636210047) instalado y arranca sin crash: "Nucleo Rust OK", UI accesible vía uiautomator, proceso vivo, 0 errores Flutter.
+- PERO la pantalla física queda negra aunque uiautomator ve la UI: SurfaceFlinger muestra la capa visible con color{0,0,0,1} y fps=0.08; screencap sale 100% negro incluso en la app de Ajustes del sistema → NO es bug de UrquiOffice, es el renderizado gráfico de esta tablet bajo adb/PRoot (el framebuffer real no recibe frames).
+- Conclusión: la lógica Rust↔Flutter funciona (estado OK, sin undefined symbol); la verificación visual en pantalla física queda pendiente de probar la tablet sin adb (tocarla directo).
+- Sub-paso 5.4 pendiente: SAF para file.save/file.open .docx.
