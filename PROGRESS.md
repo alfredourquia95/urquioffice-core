@@ -65,3 +65,10 @@
 - Fix: AR_aarch64_linux_android=llvm-ar y RANLIB=llvm-ranlib en build.yml.
 - Fix FFI: main.dart usa ExternalLibrary.process(iKnowHowToUseIt: true) para cargar librust_lib_urquioffice.so desde jniLibs/arm64-v8a del APK.
 - Verificaciones swarm: Fase 4 UI cumple blueprint 4.1-4.4 (analyze 0 issues); FFI OK (6/6 tests, sin panic/unsafe); tablet TAB-T126-8 Android 15 SDK35 arm64-v8a con 24G libres y app ya instalada (versionCode 1).
+
+## Fase 3 CI - fix #3 (15:20Z) - APK YA EN LA TABLET, un detalle pendiente
+- Corridas 43607113579 y 43607176838: SUCCESS. APK debug (239MB) descargado de artefactos y contiene lib/arm64-v8a/librust_lib_urquioffice.so (88MB, símbolos frb exportados OK).
+- Instalado en TAB-T126-8 (Android 15, arm64): uninstall firma vieja + install OK.
+- PERO la app crashea al abrir: "Failed to lookup symbol 'frb_get_rust_content_hash' ... by process()".
+- Diagnóstico: el APK se generó con extractNativeLibs=false (AGP default targetSdk 36), así que Android NO extrajo los .so a /data/app/.../lib/arm64 (vacío) y DynamicLibrary.process() no los encuentra.
+- Fix pusheado: android:extractNativeLibs="true" en el manifest + packaging.jniLibs.useLegacyPackaging=true en build.gradle.kts. Nueva corrida 43609681589 in_progress.
