@@ -170,15 +170,32 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- Acciones mock (Fase 4: no hacen nada real todavioa) ---
-  void _accionGuardar() {}
-  void _accionAbrir() {}
-  void _accionNegrita() {}
-  void _accionCursiva() {}
-  void _accionSubrayar() {}
+  // --- Acciones reales vía execute_command (Fase 5) ---
+  Future<void> _ejecutarComando(String comando, String args) async {
+    try {
+      final r = await rust_api.executeCommand(commandName: comando, args: args);
+      if (!mounted) return;
+      setState(() => estadoRust = r.isEmpty ? 'OK: $comando' : 'OK: $comando -> $r');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = 'Error en $comando: $e');
+    }
+  }
+
+  void _accionGuardar() {
+    // Fase 5.4 (SAF) pendiente: por ahora marcamos estado.
+    setState(() => estadoRust = 'Guardar: pendiente SAF (fase 5.4)');
+  }
+
+  void _accionAbrir() {
+    setState(() => estadoRust = 'Abrir: pendiente SAF (fase 5.4)');
+  }
+
+  void _accionNegrita() => _ejecutarComando('format.bold', '');
+  void _accionCursiva() => _ejecutarComando('format.italic', '');
+  void _accionSubrayar() => _ejecutarComando('format.underline', '');
 
   void _onRibbonAccion(String comando) {
-    // Fase 4: los botones del ribbon solo cambian de pestaña o disparan mocks.
     switch (comando) {
       case 'guardar':
         _accionGuardar();
@@ -190,6 +207,16 @@ class _HomePageState extends State<HomePage> {
         _accionCursiva();
       case 'subrayar':
         _accionSubrayar();
+      case 'edit.undo':
+        _ejecutarComando('edit.undo', '');
+      case 'edit.redo':
+        _ejecutarComando('edit.redo', '');
+      case 'align.left':
+        _ejecutarComando('align.left', '');
+      case 'align.center':
+        _ejecutarComando('align.center', '');
+      case 'align.right':
+        _ejecutarComando('align.right', '');
       case 'panel_ia':
         setState(() => panelIAVisible = !panelIAVisible);
     }
