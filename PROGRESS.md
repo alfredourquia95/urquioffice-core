@@ -99,3 +99,8 @@
 - Núcleo: sesión global `Mutex<Option<Session>>`; `doc_nuevo()`, `ejecutar_comando(id, args JSON)`, `obtener_dibujo()`; 7/7 tests pasan (incluye fase5_sesion_global_comandos_y_dibujo).
 - FFI: `execute_command` real + nueva `obtener_dibujo() -> JSON [{x,y,text,bold}]`; bindings regenerados (obtenerDibujo en Dart).
 - Sub-paso 5b en curso: DocumentCanvas editable en Flutter que envía text.insert y repinta con obtener_dibujo().
+
+## Fase 5 - 5b/5c completados (20:11Z)
+- DocumentCanvas editable: cada tecla envía text.insert/edit.backspace vía execute_command; repinta con obtener_dibujo() (JSON [{x,y,text,bold}]) usando CustomPainter+TextPainter con escala A4.
+- Ribbon cableado a comandos reales: format.bold/italic/underline, edit.undo/redo, align.left/center/right. Guardar/abrir pendientes de SAF (5.4).
+- flutter analyze 0 issues. Corrida CI 43636153182 en cola (compila .so + APK con el nuevo núcleo).
