@@ -51,7 +51,6 @@ jobs:
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;${{ env.NDK_VERSION }}"
           echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
-          echo "$SDK" > /workspace/urquioffice-core/app/android/local.properties.tmp
           printf 'sdk.dir=%s\n' "$SDK" > app/android/local.properties
 
       - name: Instalar Rust y target aarch64-linux-android
