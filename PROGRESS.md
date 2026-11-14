@@ -52,3 +52,10 @@
 - `.github/workflows/build.yml`: ubuntu-24.04 + Flutter 3.47.9 + NDK 28.2.13676358 + Rust stable.
 - Compila `librust_lib_urquioffice.so`, lo mete en `jniLibs/arm64-v8a`, corre `flutter build apk --debug`, verifica el .so dentro del APK y sube artefacto `urquioffice-app-debug-arm64`.
 - Push a main dispara el workflow automaticamente.
+
+## Fase 4 - UI Flutter mockups (en progreso)
+- `app/lib/main.dart`: AppBar con titulo + botones abrir/guardar/panel IA, CallbackShortcuts (Ctrl+S/O/B/I/U), barra de estado con estado del nucleo Rust.
+- `app/lib/widgets/ribbon.dart`: pestanas Inicio/Insertar/Diseno/IA con MouseRegion hover y grupos de botones (Fuente, Parrafo, Portapapeles, etc.).
+- `app/lib/widgets/document_canvas.dart`: CustomPainter dibuja hoja A4 blanca con sombra + texto estatico de prueba.
+- `app/lib/widgets/side_panel_ia.dart`: panel derecho 300px con chat mock, campo de texto y boton enviar (sin logica real).
+- `flutter analyze`: 0 issues.

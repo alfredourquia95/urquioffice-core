@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'src/rust/api.dart' as rust_api;
 import 'src/rust/frb_generated.dart';
+import 'widgets/ribbon.dart';
+import 'widgets/document_canvas.dart';
+import 'widgets/side_panel_ia.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +20,14 @@ class UrquiOfficeApp extends StatelessWidget {
     return MaterialApp(
       title: 'UrquiOffice',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1F4E79),
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFE8EAED),
+      ),
       home: const HomePage(),
     );
   }
@@ -29,7 +41,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String estado = 'Inicializando Rust...';
+  String estadoRust = 'Inicializando Rust...';
+  String pestanaActiva = 'Inicio';
+  bool panelIAVisible = true;
 
   @override
   void initState() {
@@ -40,29 +54,141 @@ class _HomePageState extends State<HomePage> {
   Future<void> _probarConexion() async {
     try {
       final resultado = await rust_api.estadoNucleo();
+      if (!mounted) return;
       setState(() {
-        estado = resultado.startsWith('OK')
-            ? 'Conexión con Rust establecida\n\n$resultado'
+        estadoRust = resultado.startsWith('OK')
+            ? 'Nucleo Rust OK'
             : 'Error desde Rust: $resultado';
       });
     } catch (e) {
-      setState(() => estado = 'Excepción llamando a Rust: $e');
+      if (!mounted) return;
+      setState(() => estadoRust = 'Excepcion llamando a Rust: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('UrquiOffice')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: SelectableText(
-            estado,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+    return CallbackShortcuts(
+      bindings: {
+        // Atajos de teclado globales (Fase 4: solo registrar, sin logica real)
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () => _accionGuardar(),
+        const SingleActivator(LogicalKeyboardKey.keyO, control: true): () => _accionAbrir(),
+        const SingleActivator(LogicalKeyboardKey.keyB, control: true): () => _accionNegrita(),
+        const SingleActivator(LogicalKeyboardKey.keyI, control: true): () => _accionCursiva(),
+        const SingleActivator(LogicalKeyboardKey.keyU, control: true): () => _accionSubrayar(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          appBar: _buildAppBar(),
+          body: Column(
+            children: [
+              Ribbon(
+                pestanaActiva: pestanaActiva,
+                onCambiarPestana: (p) => setState(() => pestanaActiva = p),
+                onAccion: _onRibbonAccion,
+              ),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DocumentCanvas(mensajeEstado: estadoRust),
+                    ),
+                    if (panelIAVisible)
+                      SidePanelIA(
+                        onCerrar: () => setState(() => panelIAVisible = false),
+                      ),
+                  ],
+                ),
+              ),
+              _buildStatusBar(),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: const Row(
+        children: [
+          Icon(Icons.description_outlined, size: 22),
+          SizedBox(width: 8),
+          Text('UrquiOffice', style: TextStyle(fontWeight: FontWeight.w600)),
+          SizedBox(width: 12),
+          Text(
+            'Documento1.docx',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          tooltip: 'Abrir (Ctrl+O)',
+          icon: const Icon(Icons.folder_open_outlined),
+          onPressed: _accionAbrir,
+        ),
+        IconButton(
+          tooltip: 'Guardar (Ctrl+S)',
+          icon: const Icon(Icons.save_outlined),
+          onPressed: _accionGuardar,
+        ),
+        IconButton(
+          tooltip: panelIAVisible ? 'Ocultar panel IA' : 'Mostrar panel IA',
+          icon: Icon(panelIAVisible ? Icons.chat_bubble : Icons.chat_bubble_outline),
+          onPressed: () => setState(() => panelIAVisible = !panelIAVisible),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  Widget _buildStatusBar() {
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      color: const Color(0xFF1F4E79),
+      child: Row(
+        children: [
+          const Icon(Icons.circle, size: 8, color: Colors.greenAccent),
+          const SizedBox(width: 6),
+          Text(
+            estadoRust,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const Spacer(),
+          const Text(
+            'Listo  |  Pagina 1 de 1  |  Palabras: 0',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Acciones mock (Fase 4: no hacen nada real todavioa) ---
+  void _accionGuardar() {}
+  void _accionAbrir() {}
+  void _accionNegrita() {}
+  void _accionCursiva() {}
+  void _accionSubrayar() {}
+
+  void _onRibbonAccion(String comando) {
+    // Fase 4: los botones del ribbon solo cambian de pestaña o disparan mocks.
+    switch (comando) {
+      case 'guardar':
+        _accionGuardar();
+      case 'abrir':
+        _accionAbrir();
+      case 'negrita':
+        _accionNegrita();
+      case 'cursiva':
+        _accionCursiva();
+      case 'subrayar':
+        _accionSubrayar();
+      case 'panel_ia':
+        setState(() => panelIAVisible = !panelIAVisible);
+    }
   }
 }
