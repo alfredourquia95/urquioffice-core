@@ -83,3 +83,9 @@
 - La app ARRANCA SIN CRASH: proceso vivo (pid 21780), MainActivity en primer plano, 0 errores de Flutter en logcat.
 - El puente flutter_rust_bridge carga librust_lib_urquioffice.so vía DynamicLibrary.open y estadoNucleo() responde.
 - Fixes aplicados en CI: AR/RANLIB=llvm-ar/llvm-ranlib del NDK, extractNativeLibs=true + useLegacyPackaging, RustLib.init() por defecto.
+
+## Documentos de conocimiento creados (16:55Z)
+- PLAN_FASES_5-7.md: plan detallado de Fases 5 (integración comandos), 6 (agente IA) y 7 (fuentes + release).
+- LECCIONES_APRENDIDAS.md: problemas reales y soluciones (PRoot/NDK, cc-rs llvm-ar, extractNativeLibs, ExternalLibrary.process, parches ureq/krilla).
+- ESTADO_Y_FUNCIONA.md: qué funciona hoy, estructura del repo y comandos de despliegue.
+- AGENTS.md global en /root/.jcode/AGENTS.md + memoria persistente guardada.
