@@ -1,0 +1,26 @@
+[package]
+name = "urquioffice-core"
+version = "0.1.0"
+edition = "2024"
+description = "Núcleo de UrquiOffice: motor WordCraft en Rust puro (sin UI)"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Motor WordCraft (capas L0-L4 del blueprint)
+wordcraft-geom = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-geom" }
+wordcraft-doc = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-doc" }
+wordcraft-fonts = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-fonts" }
+wordcraft-layout = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-layout" }
+wordcraft-engine = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-engine" }
+wordcraft-docx = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-docx" }
+wordcraft-formats = { git = "https://github.com/storytold/wordcraft", package = "wordcraft-formats" }
+wordcraft-proof = { package = "craft-proof", git = "https://github.com/storytold/craft-libs" }
+serde_json = "1"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+# Fix PRoot/build: krilla 0.8.2 de crates.io no tiene los campos que craft-pdf espera.
+# Usamos el krilla vendored ( parcheado) de storytold/craft-libs rev 6e03f65.
+[patch.crates-io]
+krilla = { git = "https://github.com/storytold/craft-libs", rev = "6e03f65bf45181db77ba6229716e6624db9eb25b" }
