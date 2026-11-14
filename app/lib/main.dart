@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'src/rust/api.dart' as rust_api;
 import 'src/rust/frb_generated.dart';
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart'
-    show ExternalLibrary;
 import 'widgets/ribbon.dart';
 import 'widgets/document_canvas.dart';
 import 'widgets/side_panel_ia.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init(
-    externalLibrary: ExternalLibrary.process(iKnowHowToUseIt: true),
-  );
+  // En Android el .so vive extraído en nativeLibraryDir del APK;
+  // DynamicLibrary.open('lib<stem>.so') lo resuelve via el linker del sistema.
+  // Usamos el loader por defecto de frb (stem rust_lib_urquioffice).
+  await RustLib.init();
   runApp(const UrquiOfficeApp());
 }
 
