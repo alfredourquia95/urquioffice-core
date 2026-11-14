@@ -32,6 +32,14 @@ android {
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
+
+        // Forzar extractNativeLibs=true para que Android extraiga los .so del APK
+        // a lib/arm64 (DynamicLibrary.process() no puede dlopen desde dentro del APK)
+        packaging {
+            jniLibs {
+                useLegacyPackaging = true
+            }
+        }
     }
 
     // La librería Rust compilada (cdylib) se empaqueta desde rust/target
