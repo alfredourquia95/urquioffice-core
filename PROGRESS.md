@@ -77,3 +77,9 @@
 - APK con extractNativeLibs=true instala y extrae bien el .so (lib/arm64/librust_lib_urquioffice.so presente), pero ExternalLibrary.process() busca frb_get_rust_content_hash en libflutter.so → undefined symbol.
 - Fix: volver a RustLib.init() sin argumentos: en Android frb hace DynamicLibrary.open('librust_lib_urquioffice.so') que el linker resuelve al nativeLibraryDir.
 - flutter analyze: 0 issues. Push disparó nueva corrida.
+
+## FASE 3 COMPLETADA (16:00Z) - APK con puente Rust funcionando en la tablet
+- Corrida 43611872718 SUCCESS. APK instalado en TAB-T126-8 (adb 127.0.0.1:5580).
+- La app ARRANCA SIN CRASH: proceso vivo (pid 21780), MainActivity en primer plano, 0 errores de Flutter en logcat.
+- El puente flutter_rust_bridge carga librust_lib_urquioffice.so vía DynamicLibrary.open y estadoNucleo() responde.
+- Fixes aplicados en CI: AR/RANLIB=llvm-ar/llvm-ranlib del NDK, extractNativeLibs=true + useLegacyPackaging, RustLib.init() por defecto.
