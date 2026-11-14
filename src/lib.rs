@@ -3,6 +3,9 @@
 //! Reglas del blueprint: sin `panic!`, `unwrap()`, `expect()`, `todo!()` ni `unsafe`.
 //! Todo error se maneja con `Result<T, E>`.
 
+pub mod ai_server;
+pub mod db;
+
 use wordcraft_engine::Session;
 use wordcraft_engine::layout::Placed;
 use wordcraft_engine::doc::Document;

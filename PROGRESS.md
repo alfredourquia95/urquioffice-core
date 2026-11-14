@@ -1,6 +1,6 @@
 # 📊 UrquiOffice: Registro de Progreso (PROGRESS.md)
 
-> Última actualización: 2026-11-14 01:36 UTC | Rama: `main`
+> Última actualización: 2026-11-14 02:18 UTC | Rama: `main`
 > Regla de oro: tras cada sub-fase completada → actualizar este archivo + `git commit` (+ push si hay remoto).
 > Fuente de verdad: `URQUIOFFICE_MASTER_BLUEPRINT.md` (v1.0)
 
@@ -8,8 +8,8 @@
 
 | Fase | Estado | Último commit | Notas |
 | :--- | :--- | :--- | :--- |
-| 1. Núcleo WordCraft (Rust puro) | ✅ COMPLETADA | (pendiente commit) | Test pasa: lista de dibujo impresa en consola |
-| 2. SQLite + Servidor IA local | ⏳ Pendiente | — | |
+| 1. Núcleo WordCraft (Rust puro) | ✅ COMPLETADA | `d53e0de` | Test imprime lista de dibujo (72.0, 83.1) bold=true |
+| 2. SQLite + Servidor IA local | ✅ COMPLETADA | (pendiente commit) | 6/6 tests OK incl. end-to-end real contra Venagate |
 | 3. Puente FFI Flutter-Rust | ⏳ Pendiente | — | |
 | 4. UI visual Flutter (mockups) | ⏳ Pendiente | — | |
 | 5. Integración comandos (422) | ⏳ Pendiente | — | |
@@ -17,6 +17,14 @@
 | 7. Tipografías + APK release | ⏳ Pendiente | — | |
 
 ## Historial de avances
+
+### 2026-11-14 02:18 UTC — FASE 2 COMPLETADA ✅
+- `src/db.rs`: SQLite (rusqlite bundled) con `settings`, `api_keys` (AES-256-GCM, clave derivada con SHA-256), `chat_history`, `recent_files`. Tests: esquema, cifrado roundtrip, clave incorrecta falla, rotación (desactivar).
+- `src/ai_server.rs`: axum en `127.0.0.1:31337` con `POST /v1/chat/completions` + `GET /v1/models` (proxy a Venagate `127.0.0.1:31079`). Resiliencia: token bucket 40 RPM, backoff exponencial en 429/5xx (lee `Retry-After`), watchdog 20s por chunk SSE, rotación round-robin de claves con desactivación en DB.
+- reqwest con `rustls-tls` (sin openssl, no disponible en PRoot). rand_core 0.9 con `os_rng` (OsRng usa `TryRngCore::try_fill_bytes`).
+- **Test end-to-end OK**: clave nvapi real guardada cifrada en SQLite → `llamar_venagate` → Venagate responde 200 con `nvidia/mistralai/mistral-large-4-1t-a52b`. Modelo por defecto: `nvidia/mistralai/mistral-large-4-1t-a52b`. Claves en `~/.config/openvidia/keys.json` (7 nvapi).
+- `cargo test`: 6/6 pasan. Sin unwrap/expect/panic/unsafe en código.
+- **Siguiente paso:** Fase 3.1 → `flutter create .` + flutter_rust_bridge + `init_app()` con `#[flutter_rust_bridge::frb(init)]`.
 
 ### 2026-11-14 01:36 UTC — FASE 1 COMPLETADA ✅
 - Crate `urquioffice-core` inicializado (`cargo init --lib`).
