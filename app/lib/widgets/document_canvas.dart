@@ -166,6 +166,7 @@ class _HojaPainter extends CustomPainter {
       final estilo = TextStyle(
         color: Colors.black87,
         fontSize: 14 * escala,
+        fontFamily: 'Liberation Sans',
         fontWeight: l.bold ? FontWeight.bold : FontWeight.normal,
         height: 1.2,
       );

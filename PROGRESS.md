@@ -174,3 +174,11 @@
   artefacto `urquioffice-app-release-arm64` (verifica que trae el .so Rust).
 - Criterio de Fase 7 pendiente de verificación en tablet con el APK release:
   fuentes Liberation cargadas (estado muestra "fuentes: OK: 8...") y app sin internet salvo IA.
+
+## 2026-11-15 — Fase 7 verificada en tablet (APK release 43667431412, 54 MB vs 116 MB debug)
+- APK release instala y arranca sin crash de la app (el FATAL en logcat es del
+  proceso adb-relay de Jcode, no nuestro). Servidor IA sigue en 31337 (en écoute).
+- UI completa vía uiautomator; panel IA con mensajes y botón Enviar presentes.
+- 7.2 extra: fuentes declaradas también como `fonts:` en pubspec (familia
+  "Liberation Sans"/"Liberation Serif") y el canvas usa fontFamily: 'Liberation Sans'.
+- flutter analyze 0 issues; 15/15 tests Rust.
