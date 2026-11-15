@@ -33,3 +33,13 @@ Future<String> fileGuardar({required String path}) =>
 /// Abre un .docx desde `path` y lo carga como documento activo (Fase 5.4).
 Future<String> fileAbrir({required String path}) =>
     RustLib.instance.api.crateApiFileAbrir(path: path);
+
+/// Arranca (o confirma) el servidor de IA local en 127.0.0.1:31337 (Fase 6).
+Future<String> arrancarServidorIa({
+  required String rutaDb,
+  required String secreto,
+}) =>
+    RustLib.instance.api.crateApiArrancarServidorIa(
+      rutaDb: rutaDb,
+      secreto: secreto,
+    );

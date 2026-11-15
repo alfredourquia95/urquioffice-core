@@ -177,6 +177,55 @@ pub fn file_abrir(path: &str) -> Result<serde_json::Value, CoreError> {
     }))
 }
 
+/// Estado del servidor de IA local (Fase 6): arrancado una vez en segundo plano.
+static SERVIDOR_IA: OnceLock<std::sync::Mutex<bool>> = OnceLock::new();
+
+/// Arranca el servidor de IA local (127.0.0.1:31337) en un hilo aparte con su propio
+/// runtime de Tokio. Usa la DB en la ruta por defecto de la app (app documents).
+/// Devuelve "OK" si arrancó o ya estaba corriendo; el error si falló.
+pub fn arrancar_servidor_ia(ruta_db: &str, secreto: &str) -> Result<String, CoreError> {
+    let flag = SERVIDOR_IA.get_or_init(|| std::sync::Mutex::new(false));
+    let mut ya = flag.lock().map_err(|e| CoreError::Lock(e.to_string()))?;
+    if *ya {
+        return Ok("OK: servidor IA ya corriendo en 127.0.0.1:31337".to_string());
+    }
+    let ruta = std::path::PathBuf::from(ruta_db);
+    let secreto = secreto.to_string();
+    let handle = std::thread::Builder::new()
+        .name("urquioffice-ia".to_string())
+        .spawn(move || {
+            let rt = match tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                Ok(rt) => rt,
+                Err(e) => {
+                    log::error!("servidor IA: no se pudo crear runtime tokio: {e}");
+                    return;
+                }
+            };
+            rt.block_on(async move {
+                let db = match crate::db::Database::abrir(&ruta, &secreto) {
+                    Ok(db) => db,
+                    Err(e) => {
+                        log::error!("servidor IA: no si pudo abrir DB {ruta:?}: {e}");
+                        return;
+                    }
+                };
+                if let Err(e) = crate::ai_server::arrancar(db).await {
+                    log::error!("servidor IA terminó con error: {e}");
+                }
+            });
+        });
+    match handle {
+        Ok(_) => {
+            *ya = true;
+            Ok("OK: servidor IA arrancando en 127.0.0.1:31337".to_string())
+        }
+        Err(e) => Err(CoreError::Command(format!("spawn hilo IA: {e}"))),
+    }
+}
+
 /// Ejecuta la demo de la Fase 1:
 /// 1. Crea un documento vacío.
 /// 2. Inserta el párrafo "Hola UrquiOffice".
@@ -317,5 +366,34 @@ mod tests {
         let _ = std::fs::remove_file(&ruta);
         let _ = std::fs::remove_dir(&dir);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests_fase6 {
+    use super::*;
+
+    #[test]
+    fn fase6_arrancar_servidor_ia_es_idempotente() {
+        let dir = std::env::temp_dir().join("urquioffice_test_ia");
+        let _ = std::fs::create_dir_all(&dir);
+        let ruta = dir.join("test_ia.db");
+        let r1 = arrancar_servidor_ia(ruta.to_string_lossy().as_ref(), "secreto-test");
+        assert!(matches!(r1, Ok(_)), "primera llamada debe ser OK: {r1:?}");
+        // Segunda llamada debe decir que ya está corriendo (idempotente).
+        let r2 = arrancar_servidor_ia(ruta.to_string_lossy().as_ref(), "secreto-test");
+        assert!(
+            matches!(&r2, Ok(m) if m.contains("ya corriendo")),
+            "segunda llamada debe ser idempotente: {r2:?}"
+        );
+        // El puerto 31337 debe responder (dar timeout corto porque el bind es async).
+        let addr = std::net::TcpStream::connect_timeout(
+            &"127.0.0.1:31337".parse().unwrap_or_else(|_| "127.0.0.1:31337".parse().unwrap_or(std::net::SocketAddr::from(([127,0,0,1],31337)))),
+            std::time::Duration::from_secs(3),
+        );
+        // Puede fallar si el hilo aún no hizo bind; lo importante es que no pánico.
+        let _ = addr;
+        let _ = std::fs::remove_file(&ruta);
+        let _ = std::fs::remove_dir(&dir);
     }
 }

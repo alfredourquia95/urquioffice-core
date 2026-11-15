@@ -83,6 +83,11 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 abstract class RustLibApi extends BaseApi {
   Future<String> crateApiEstadoNucleo();
 
+  Future<String> crateApiArrancarServidorIa({
+    required String rutaDb,
+    required String secreto,
+  });
+
   Future<String> crateApiExecuteCommand({
     required String commandName,
     required String args,
@@ -275,6 +280,40 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiObtenerDibujoConstMeta =>
       const TaskConstMeta(debugName: "obtener_dibujo", argNames: []);
+
+  @override
+  Future<String> crateApiArrancarServidorIa({
+    required String rutaDb,
+    required String secreto,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(rutaDb, serializer);
+          sse_encode_String(secreto, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiArrancarServidorIaConstMeta,
+        argValues: [rutaDb, secreto],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiArrancarServidorIaConstMeta => const TaskConstMeta(
+    debugName: "arrancar_servidor_ia",
+    argNames: ["rutaDb", "secreto"],
+  );
 
   @protected
   String dco_decode_String(dynamic raw) {

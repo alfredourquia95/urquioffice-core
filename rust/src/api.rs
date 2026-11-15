@@ -1,7 +1,8 @@
 //! Capa FFI de UrquiOffice: expone el núcleo Rust a Flutter vía flutter_rust_bridge.
 
 /// Inicializa la app: crea el documento nuevo en la sesión global (Fase 5)
-/// y devuelve un resumen con las primeras líneas de la lista de dibujo.
+/// y arranca el servidor de IA local (Fase 6) en 127.0.0.1:31337.
+/// Devuelve un resumen con las primeras líneas de la lista de dibujo.
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() -> String {
     iniciar_nucleo()
@@ -13,23 +14,45 @@ pub fn estado_nucleo() -> String {
 }
 
 fn iniciar_nucleo() -> String {
-    let nuevo = urquioffice_core::doc_nuevo();
-    if let Err(e) = nuevo {
-        return format!("ERROR: doc_nuevo: {e}");
+    let mut partes: Vec<String> = Vec::new();
+
+    // Documento nuevo en la sesión global.
+    match urquioffice_core::doc_nuevo() {
+        Ok(()) => partes.push("documento: OK".to_string()),
+        Err(e) => partes.push(format!("documento ERROR: {e}")),
     }
+
+    // Servidor IA local en segundo plano. La DB vive en el dir de la app;
+    // Flutter pasa la ruta real con arrancarServidorIa(rutaDb). Aquí usamos
+    // una ruta por defecto bajo /data/data del paquete vía env HOME.
+    let ruta_db = std::env::var("URQUIOFFICE_DB")
+        .unwrap_or_else(|_| "/data/data/com.example.urquioffice/files/urquioffice.db".to_string());
+    let secreto = std::env::var("URQUIOFFICE_DB_SECRET")
+        .unwrap_or_else(|_| "urquioffice-local-secret".to_string());
+    match urquioffice_core::arrancar_servidor_ia(&ruta_db, &secreto) {
+        Ok(m) => partes.push(format!("IA: {m}")),
+        Err(e) => partes.push(format!("IA ERROR: {e}")),
+    }
+
     match urquioffice_core::demo_fase1() {
         Ok(lineas) => {
-            let mut out = String::from("OK: motor WordCraft inicializado. Lista de dibujo:\n");
+            partes.push("motor WordCraft OK. Lista de dibujo:".to_string());
             for l in lineas.iter().take(5) {
-                out.push_str(&format!(
-                    "  ({:.1}, {:.1}) bold={} {:?}\n",
+                partes.push(format!(
+                    "  ({:.1}, {:.1}) bold={} {:?}",
                     l.x, l.y, l.bold, l.text
                 ));
             }
-            out
         }
-        Err(e) => format!("ERROR: {e}"),
+        Err(e) => partes.push(format!("motor ERROR: {e}")),
     }
+    partes.join("\n")
+}
+
+/// Arranca (o confirma) el servidor de IA local. Flutter debe llamar a esta
+/// función pasando la ruta real de la base de datos dentro del paquete Android.
+pub fn arrancar_servidor_ia(ruta_db: String, secreto: String) -> Result<String, String> {
+    urquioffice_core::arrancar_servidor_ia(&ruta_db, &secreto).map_err(|e| e.to_string())
 }
 
 /// Ejecuta un comando del engine de WordCraft sobre la sesión global (Fase 5).

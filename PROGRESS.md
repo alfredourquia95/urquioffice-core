@@ -116,3 +116,15 @@
 - Hallazgos clave: (1) format.bold es toggle, usar {"value":true} para forzar; (2) file.save del engine puede escribir b=0 si el estado quedó par → guardamos directo con docx::write; (3) file.open abre "al lado" si la sesión ya está usada → usamos set_document directo; (4) la sesión global compartida entre tests paralelos causaba condiciones de carrera → tests de docx usan Session local.
 - FFI: fileGuardar/fileAbrir. Flutter: file_picker + SAF, botones Guardar/Abrir cableados. analyze 0 issues. Corrida CI disparada.
 - FASE 5 COMPLETA: criterio de éxito (escribir + negrita + guardar + reabrir = formato persiste) probado en tests Rust.
+
+## 2026-11-15 — Fase 6.1 (inicio): servidor IA arranca dentro de la app
+- `arrancar_servidor_ia(ruta_db, secreto)` en el núcleo: hilo propio con runtime
+  tokio current_thread, `Database::abrir` + `ai_server::arrancar` (127.0.0.1:31337),
+  idempotente vía `OnceLock<Mutex<bool>>`. Sin panic/unwrap (solo Result + log).
+- FFI nueva `arrancar_servidor_ia` expuesta a Dart (funcId 7, bindings Dart+Rust
+  añadidos a mano porque el codegen no corre en local por PRoot; el CI lo
+  regenera con `flutter_rust_bridge_codegen generate` y debe coincidir).
+- `init_app` ahora también arranca el servidor IA con ruta por defecto bajo
+  /data/data; Dart puede relanzarlo con la ruta real vía `arrancarServidorIa`.
+- Test nuevo: idempotencia de arranque (9/9 tests pasan). `cargo check` y
+  `flutter analyze` en 0 issues.

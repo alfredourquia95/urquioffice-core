@@ -3106,6 +3106,7 @@ dependencies = [
  "axum",
  "craft-proof 0.1.0 (git+https://github.com/storytold/craft-libs)",
  "futures-util",
+ "log",
  "rand",
  "rand_core 0.9.5",
  "reqwest",
