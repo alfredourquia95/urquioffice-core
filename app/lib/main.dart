@@ -181,9 +181,13 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Icon(Icons.circle, size: 8, color: Colors.greenAccent),
           const SizedBox(width: 6),
-          Text(
-            estadoRust,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+          Expanded(
+            child: Text(
+              estadoRust,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+              semanticsLabel: 'estado: $estadoRust',
+            ),
           ),
           const Spacer(),
           const Text(

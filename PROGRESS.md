@@ -151,3 +151,12 @@
   (español si está embebido, si no inglés); CI ahora embebe `es` con
   CRAFT_PROOF_EMBED="en,es,...". Resultado en la barra de estado.
 - 14/14 tests Rust pasan; cargo check (crate frb) OK; flutter analyze 0 issues.
+
+## 2026-11-15 — Fase 6 verificada en tablet TAB-T126-8 (APK 43663884032)
+- CI en verde (fix de indentación YAML en CRAFT_PROOF_EMBED). APK instalado OK.
+- App arranca sin crash; UI completa visible vía uiautomator (ribbon, panel IA con
+  mensajes iniciales, botón Enviar).
+- Servidor IA local CONFIRMADO: puerto 31337 en escucha dentro del proceso
+  (0100007F:7A69 en /proc/net/tcp) y GET /v1/models responde 200 con la lista
+  de modelos de Venagate. El arranque vía FFI con la ruta real de la DB funciona.
+- Mejora menor: barra de estado con Expanded+semanticsLabel para depurar el estado.
