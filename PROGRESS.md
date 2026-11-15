@@ -195,3 +195,10 @@
 - En tablet, `FilePicker.platform.saveFile` sin `bytes` lanza "Bytes are required
   on Android & iOS". Fix: pasar `bytes: utf8.encode(' ')`; el contenido real lo
   escribe Rust vía file_guardar. flutter analyze 0 issues.
+
+## 2026-11-15 — Verificación tablet APK 43671852100: NÚCLEO OK COMPLETO
+- Estado en barra: "documento: OK | IA: OK: servidor IA ya corriendo en
+  127.0.0.1:31337 | motor WordCraft OK ... | fuentes: OK: 8 fuente(s) instaladas".
+- Puerto 31337 en escucha (0100007F:7A69). Botón "Clave IA" presente en pestaña IA.
+- Fix menor: estadoNucleo ahora se considera OK si contiene 'motor WordCraft OK'
+  (antes esperaba prefijo 'OK' y marcaba 'Error desde Rust' aunque todo estuviera bien).

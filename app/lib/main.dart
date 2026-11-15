@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
       final resultado = await rust_api.estadoNucleo();
       if (!mounted) return;
       setState(() {
-        estadoRust = resultado.startsWith('OK')
+        estadoRust = resultado.contains('motor WordCraft OK')
             ? 'Nucleo Rust OK'
             : 'Error desde Rust: $resultado';
       });
