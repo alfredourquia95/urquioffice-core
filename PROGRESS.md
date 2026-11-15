@@ -209,3 +209,28 @@
   con ejemplo concreto. El flujo ya está cableado: extraerToolCalls →
   ejecutarToolCall → onRepintar → canvas recarga obtenerDibujo().
 - flutter analyze 0 issues.
+
+---
+## RESUMEN EJECUTIVO — 2026-11-15 (sesión completa)
+Fases 6 y 7 del blueprint COMPLETADAS y verificadas en tablet TAB-T126-8:
+
+FASE 6 (agente IA en la UI) ✅
+- 6.1 Servidor axum arranca dentro de la app (hilo + tokio propio, idempotente,
+  FFI arrancarServidorIa). Verificado: puerto 31337 en escucha en el proceso.
+- 6.2 Chat real con streaming SSE (ClienteIA + SidePanelIA), historial, burbuja "...".
+- 6.3 Tool calling: parser {"tool","args"} en Rust (4 tests), FFI extraerToolCalls/
+  ejecutarToolCall, el panel ejecuta comandos y repinta el canvas. System prompt con
+  instrucciones y ejemplo concreto.
+- 6.4 Botón "Revisar" → craft-proof (español embebido vía CRAFT_PROOF_EMBED en CI).
+- 6.5 Botón "Clave IA" guarda la clave de Venagate cifrada (AES-256-GCM) vía FFI.
+
+FASE 7 (tipografías y release) ✅
+- 7.1–7.3 Liberation Sans/Serif (8 TTF) como assets + familias en pubspec + carga
+  en FontDb de wordcraft vía FFI. Verificado en tablet: "fuentes: OK: 8 fuente(s)".
+- 7.4 CI compila también APK release (54 MB vs 116 MB debug), artefacto
+  urquioffice-app-release-arm64. Instalado y arranca sin crash.
+
+Estado: 15/15 tests Rust, flutter analyze 0 issues, CI en verde, todo pusheado a main.
+Pendiente para el usuario: pegar su clave real de Venagate en "Clave IA" para que
+el chat responda de verdad, y probar físicamente el criterio "pon el primer párrafo
+en negrita" (el screencap por adb sale negro por PRoot, no por la app).
