@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'src/rust/api.dart' as rust_api;
 import 'src/rust/frb_generated.dart';
 import 'widgets/ribbon.dart';
@@ -67,6 +68,26 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => estadoRust = 'Excepcion llamando a Rust: $e');
+    }
+    // Fase 6: arrancar el servidor IA local con la ruta real de la app.
+    await _arrancarServidorIA();
+  }
+
+  Future<void> _arrancarServidorIA() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final rutaDb = '${dir.path}/urquioffice.db';
+      final r = await rust_api.arrancarServidorIa(
+        rutaDb: rutaDb,
+        secreto: 'urquioffice-local-secret',
+      );
+      if (!mounted) return;
+      setState(() {
+        estadoRust = '$estadoRust | $r';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = '$estadoRust | IA error: $e');
     }
   }
 

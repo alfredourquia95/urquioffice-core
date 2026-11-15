@@ -128,3 +128,13 @@
   /data/data; Dart puede relanzarlo con la ruta real vía `arrancarServidorIa`.
 - Test nuevo: idempotencia de arranque (9/9 tests pasan). `cargo check` y
   `flutter analyze` en 0 issues.
+
+## 2026-11-15 — Fase 6.2: chat IA real con streaming SSE en la UI
+- `ClienteIA` (Dart, paquete http): POST /v1/chat/completions con stream:true
+  a 127.0.0.1:31337, parseo SSE linea a linea (data: {"choices":[{"delta"...}]}).
+- `SidePanelIA` reescrito: historial system+user+assistant, burbuja "..." mientras
+  transmite, repintado por fragmento (streaming visible), bloquea input mientras espera.
+- main.dart: `_arrancarServidorIA()` con ruta real de la DB vía path_provider
+  (getApplicationDocumentsDirectory/urquioffice.db) vía FFI arrancarServidorIa.
+- AndroidManifest: permiso INTERNET (loopback 31337).
+- flutter analyze: 0 issues. Pendiente: tool calling (fase 6.3).

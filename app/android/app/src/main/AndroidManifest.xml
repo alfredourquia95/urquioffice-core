@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fase 6: el chat IA habla con el servidor local en 127.0.0.1:31337 -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="urquioffice"
         android:name="${applicationName}"

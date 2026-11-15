@@ -1,7 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../services/cliente_ia.dart';
+
+/// Un mensaje del chat. [mio] = enviado por el usuario (alineado a la derecha).
+class MensajeChat {
+  MensajeChat({required this.texto, required this.mio});
+  String texto;
+  final bool mio;
+}
+
 /// Panel lateral derecho del agente de IA.
-/// Fase 4: campo de texto y boton enviar; el boton aun no hace nada.
+/// Fase 6: chat real contra el servidor local 127.0.0.1:31337 con streaming SSE.
 class SidePanelIA extends StatefulWidget {
   final VoidCallback? onCerrar;
 
@@ -13,26 +24,71 @@ class SidePanelIA extends StatefulWidget {
 
 class _SidePanelIAState extends State<SidePanelIA> {
   final _controlador = TextEditingController();
-  final _mensajes = <String>[
-    'Hola, soy el asistente de UrquiOffice.',
-    'Puedo resumir, traducir y revisar tu documento.',
+  final _cliente = ClienteIA();
+  final _mensajes = <MensajeChat>[
+    MensajeChat(
+      texto: 'Hola, soy el asistente de UrquiOffice.',
+      mio: false,
+    ),
+    MensajeChat(
+      texto: 'Puedo resumir, traducir y revisar tu documento.',
+      mio: false,
+    ),
   ];
+  final _historial = <Map<String, String>>[
+    {
+      'role': 'system',
+      'content':
+          'Eres el asistente de UrquiOffice, una suite ofimatica. Responde en '
+          'español, de forma breve y directa. Ayuda a editar el documento del usuario.',
+    },
+  ];
+  bool _esperando = false;
   int _hoverEnviar = 0;
+  StreamSubscription<String>? _sub;
 
   @override
   void dispose() {
+    _sub?.cancel();
     _controlador.dispose();
     super.dispose();
   }
 
-  void _enviar() {
-    // Fase 4: el boton no hace nada real; solo anade el texto a la lista local.
+  Future<void> _enviar() async {
     final texto = _controlador.text.trim();
-    if (texto.isEmpty) return;
+    if (texto.isEmpty || _esperando) return;
     setState(() {
-      _mensajes.add(texto);
+      _mensajes.add(MensajeChat(texto: texto, mio: true));
+      _mensajes.add(MensajeChat(texto: '', mio: false)); // burbuja en curso
+      _esperando = true;
       _controlador.clear();
     });
+    _historial.add({'role': 'user', 'content': texto});
+
+    final indiceRespuesta = _mensajes.length - 1;
+    try {
+      final stream = _cliente.chatStream(List.of(_historial));
+      final buffer = StringBuffer();
+      await for (final frag in stream) {
+        buffer.write(frag);
+        if (!mounted) break;
+        setState(() {
+          _mensajes[indiceRespuesta].texto = buffer.toString();
+        });
+      }
+      final respuesta = buffer.toString();
+      if (respuesta.isNotEmpty) {
+        _historial.add({'role': 'assistant', 'content': respuesta});
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _mensajes[indiceRespuesta].texto = 'Error IA: $e';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _esperando = false);
+    }
   }
 
   @override
@@ -49,10 +105,7 @@ class _SidePanelIAState extends State<SidePanelIA> {
           Container(
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: const BoxDecoration(
-              color: Color(0xFF1F4E79),
-              borderRadius: BorderRadius.only(topRight: Radius.circular(0)),
-            ),
+            decoration: const BoxDecoration(color: Color(0xFF1F4E79)),
             child: Row(
               children: [
                 const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
@@ -82,9 +135,11 @@ class _SidePanelIAState extends State<SidePanelIA> {
               padding: const EdgeInsets.all(12),
               itemCount: _mensajes.length,
               itemBuilder: (context, i) {
-                final mio = i.isOdd;
+                final m = _mensajes[i];
                 return Align(
-                  alignment: mio ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: m.mio
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.symmetric(
@@ -93,16 +148,18 @@ class _SidePanelIAState extends State<SidePanelIA> {
                     ),
                     constraints: const BoxConstraints(maxWidth: 230),
                     decoration: BoxDecoration(
-                      color: mio
+                      color: m.mio
                           ? const Color(0xFF1F4E79)
                           : const Color(0xFFF0F2F5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      _mensajes[i],
+                      m.texto.isEmpty && !m.mio && _esperando
+                          ? '...'
+                          : m.texto,
                       style: TextStyle(
                         fontSize: 13,
-                        color: mio ? Colors.white : const Color(0xFF333333),
+                        color: m.mio ? Colors.white : const Color(0xFF333333),
                       ),
                     ),
                   ),
@@ -119,6 +176,7 @@ class _SidePanelIAState extends State<SidePanelIA> {
                 Expanded(
                   child: TextField(
                     controller: _controlador,
+                    enabled: !_esperando,
                     decoration: InputDecoration(
                       hintText: 'Escribe una instruccion...',
                       isDense: true,
