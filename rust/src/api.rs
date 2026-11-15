@@ -97,3 +97,36 @@ pub fn file_abrir(path: String) -> Result<String, String> {
         .map(|v| v.to_string())
         .map_err(|e| e.to_string())
 }
+
+/// Revisa la ortografía del documento activo (Fase 6.4) y devuelve JSON:
+/// [{start, end, palabra, mensaje, sugerencias: [...]}, ...].
+pub fn revisar_ortografia() -> Result<String, String> {
+    urquioffice_core::revisar_ortografia()
+        .map(|errores| {
+            serde_json::to_string(&errores).unwrap_or_else(|_| "[]".to_string())
+        })
+        .map_err(|e| e.to_string())
+}
+
+/// Ejecuta un tool call del agente IA (Fase 6.3): `tool` es el comando del
+/// engine y `args` su JSON. Devuelve el resultado del comando como JSON.
+pub fn ejecutar_tool_call(tool: String, args: String) -> Result<String, String> {
+    let call = urquioffice_core::tool_calling::ToolCall {
+        tool,
+        args: serde_json::from_str(&args).unwrap_or(serde_json::json!({})),
+    };
+    urquioffice_core::tool_calling::ejecutar_tool_call(&call)
+        .map(|v| v.to_string())
+        .map_err(|e| e.to_string())
+}
+
+/// Extrae los tool calls embebidos en un texto del modelo (Fase 6.3) y devuelve
+/// JSON: [{tool, args}, ...]. Útil para que Dart ejecute los comandos y repinte.
+pub fn extraer_tool_calls(texto: String) -> Result<String, String> {
+    let calls = urquioffice_core::tool_calling::extraer_tool_calls(&texto);
+    let arr: Vec<serde_json::Value> = calls
+        .iter()
+        .map(|c| serde_json::json!({"tool": c.tool, "args": c.args}))
+        .collect();
+    Ok(serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string()))
+}

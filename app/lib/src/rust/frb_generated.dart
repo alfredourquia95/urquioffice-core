@@ -100,6 +100,15 @@ abstract class RustLibApi extends BaseApi {
   Future<String> crateApiInitApp();
 
   Future<String> crateApiObtenerDibujo();
+
+  Future<String> crateApiRevisarOrtografia();
+
+  Future<String> crateApiEjecutarToolCall({
+    required String tool,
+    required String args,
+  });
+
+  Future<String> crateApiExtraerToolCalls({required String texto});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -313,6 +322,97 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiArrancarServidorIaConstMeta => const TaskConstMeta(
     debugName: "arrancar_servidor_ia",
     argNames: ["rutaDb", "secreto"],
+  );
+
+  @override
+  Future<String> crateApiRevisarOrtografia() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiRevisarOrtografiaConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiRevisarOrtografiaConstMeta =>
+      const TaskConstMeta(debugName: "revisar_ortografia", argNames: []);
+
+  @override
+  Future<String> crateApiEjecutarToolCall({
+    required String tool,
+    required String args,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(tool, serializer);
+          sse_encode_String(args, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiEjecutarToolCallConstMeta,
+        argValues: [tool, args],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiEjecutarToolCallConstMeta => const TaskConstMeta(
+    debugName: "ejecutar_tool_call",
+    argNames: ["tool", "args"],
+  );
+
+  @override
+  Future<String> crateApiExtraerToolCalls({required String texto}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(texto, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiExtraerToolCallsConstMeta,
+        argValues: [texto],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiExtraerToolCallsConstMeta => const TaskConstMeta(
+    debugName: "extraer_tool_calls",
+    argNames: ["texto"],
   );
 
   @protected

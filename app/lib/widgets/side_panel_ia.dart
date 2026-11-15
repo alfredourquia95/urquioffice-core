@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
 import '../services/cliente_ia.dart';
+import '../src/rust/api.dart' as rust_api;
 
 /// Un mensaje del chat. [mio] = enviado por el usuario (alineado a la derecha).
 class MensajeChat {
@@ -15,8 +17,10 @@ class MensajeChat {
 /// Fase 6: chat real contra el servidor local 127.0.0.1:31337 con streaming SSE.
 class SidePanelIA extends StatefulWidget {
   final VoidCallback? onCerrar;
+  /// Fase 6.3: avisa al padre para que repinte el canvas tras ejecutar tool calls.
+  final VoidCallback? onRepintar;
 
-  const SidePanelIA({super.key, this.onCerrar});
+  const SidePanelIA({super.key, this.onCerrar, this.onRepintar});
 
   @override
   State<SidePanelIA> createState() => _SidePanelIAState();
@@ -79,6 +83,7 @@ class _SidePanelIAState extends State<SidePanelIA> {
       final respuesta = buffer.toString();
       if (respuesta.isNotEmpty) {
         _historial.add({'role': 'assistant', 'content': respuesta});
+        await _ejecutarToolCallsDe(respuesta);
       }
     } catch (e) {
       if (mounted) {
@@ -88,6 +93,35 @@ class _SidePanelIAState extends State<SidePanelIA> {
       }
     } finally {
       if (mounted) setState(() => _esperando = false);
+    }
+  }
+
+  /// Fase 6.3: detecta tool calls {"tool","args"} en la respuesta del modelo,
+  /// los ejecuta vía FFI contra el documento y avisa para repintar.
+  Future<void> _ejecutarToolCallsDe(String respuesta) async {
+    try {
+      final json = await rust_api.extraerToolCalls(texto: respuesta);
+      final calls = jsonDecode(json) as List<dynamic>;
+      for (final c in calls) {
+        final tool = c['tool'] as String;
+        final args = jsonEncode(c['args'] ?? {});
+        await rust_api.ejecutarToolCall(tool: tool, args: args);
+      }
+      if (calls.isNotEmpty && mounted) {
+        widget.onRepintar?.call();
+        setState(() {
+          _mensajes.add(MensajeChat(
+            texto: 'He ejecutado ${calls.length} acción(es) sobre el documento.',
+            mio: false,
+          ));
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _mensajes.add(MensajeChat(texto: 'No pude ejecutar la acción: $e', mio: false));
+        });
+      }
     }
   }
 

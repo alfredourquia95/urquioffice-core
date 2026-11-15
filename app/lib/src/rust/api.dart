@@ -43,3 +43,19 @@ Future<String> arrancarServidorIa({
       rutaDb: rutaDb,
       secreto: secreto,
     );
+
+/// Revisa la ortografía del documento activo (Fase 6.4). Devuelve JSON:
+/// [{start, end, palabra, mensaje, sugerencias}, ...].
+Future<String> revisarOrtografia() =>
+    RustLib.instance.api.crateApiRevisarOrtografia();
+
+/// Ejecuta un tool call del agente IA (Fase 6.3): comando + args JSON.
+Future<String> ejecutarToolCall({
+  required String tool,
+  required String args,
+}) =>
+    RustLib.instance.api.crateApiEjecutarToolCall(tool: tool, args: args);
+
+/// Extrae los tool calls {"tool","args"} embebidos en un texto del modelo.
+Future<String> extraerToolCalls({required String texto}) =>
+    RustLib.instance.api.crateApiExtraerToolCalls(texto: texto);

@@ -5,6 +5,7 @@
 
 pub mod ai_server;
 pub mod db;
+pub mod tool_calling;
 
 use wordcraft_engine::Session;
 use wordcraft_engine::layout::Placed;
@@ -395,5 +396,67 @@ mod tests_fase6 {
         let _ = addr;
         let _ = std::fs::remove_file(&ruta);
         let _ = std::fs::remove_dir(&dir);
+    }
+}
+
+/// Resultado de una revisión ortográfica (Fase 6.4).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct ErrorOrtografico {
+    pub start: usize,
+    pub end: usize,
+    pub palabra: String,
+    pub mensaje: String,
+    pub sugerencias: Vec<String>,
+}
+
+/// Revisa la ortografía del documento activo de la sesión global con
+/// craft-proof en español (ProofLang::Es). Devuelve la lista de errores
+/// con sus sugerencias. No modifica el documento.
+pub fn revisar_ortografia() -> Result<Vec<ErrorOrtografico>, CoreError> {
+    let guard = sesion()
+        .lock()
+        .map_err(|e| CoreError::Lock(e.to_string()))?;
+    let session = guard.as_ref().ok_or(CoreError::NoSession)?;
+    let texto = session.doc.plain_text(wordcraft_doc::StoryRef::Body);
+    // Español si el diccionario está embebido; si no, inglés (siempre embebido).
+    let lang = if wordcraft_proof::ProofLang::Es.is_proofed() {
+        wordcraft_proof::ProofLang::Es
+    } else {
+        wordcraft_proof::ProofLang::En
+    };
+    let issues = wordcraft_proof::check_spelling_in(&texto, lang);
+    let mut out = Vec::new();
+    for iss in issues {
+        let palabra = texto
+            .get(iss.start..iss.end)
+            .unwrap_or("")
+            .to_string();
+        out.push(ErrorOrtografico {
+            start: iss.start,
+            end: iss.end,
+            palabra,
+            mensaje: iss.message,
+            sugerencias: iss.suggestions,
+        });
+    }
+    Ok(out)
+}
+
+#[cfg(test)]
+mod tests_fase6_4 {
+    use super::*;
+
+    #[test]
+    fn fase6_4_revisa_ortografia_en_sesion() {
+        // Sesión local para no competir con otros tests paralelos.
+        let mut s = Session::new(wordcraft_doc::Document::new());
+        s.run("text.insert", &serde_json::json!({"text": "hola mundo estoi mui kontento"})).unwrap_or_default();
+        let texto = s.doc.plain_text(wordcraft_doc::StoryRef::Body);
+        // En inglés (siempre embebido) 'estoi' y 'mui' no son palabras válidas.
+        let issues = wordcraft_proof::check_spelling_in(&texto, wordcraft_proof::ProofLang::En);
+        assert!(
+            issues.iter().any(|i| texto.get(i.start..i.end).unwrap_or("").contains("estoi")),
+            "debe detectar 'estoi': {issues:?}"
+        );
     }
 }

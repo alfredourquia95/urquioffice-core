@@ -138,3 +138,16 @@
   (getApplicationDocumentsDirectory/urquioffice.db) vía FFI arrancarServidorIa.
 - AndroidManifest: permiso INTERNET (loopback 31337).
 - flutter analyze: 0 issues. Pendiente: tool calling (fase 6.3).
+
+## 2026-11-15 — Fase 6 completa (6.1–6.4): agente IA en la UI
+- 6.1: servidor axum arranca dentro de la app (hilo + runtime tokio propio,
+  idempotente) vía FFI `arrancarServidorIa` con ruta real de la DB.
+- 6.2: chat real con streaming SSE (`ClienteIA` + SidePanelIA reescrito,
+  historial, burbuja "..." mientras transmite). Permiso INTERNET añadido.
+- 6.3: tool calling — `tool_calling.rs` (parser de bloques {"tool","args"}
+  balanceados, 4 tests) + FFI `extraerToolCalls`/`ejecutarToolCall`; el panel
+  ejecuta los comandos vía `execute_command` y repinta el canvas (onRepintar).
+- 6.4: botón "Revisar" (ai.review) → `revisarOrtografia` vía craft-proof
+  (español si está embebido, si no inglés); CI ahora embebe `es` con
+  CRAFT_PROOF_EMBED="en,es,...". Resultado en la barra de estado.
+- 14/14 tests Rust pasan; cargo check (crate frb) OK; flutter analyze 0 issues.

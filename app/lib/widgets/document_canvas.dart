@@ -42,6 +42,16 @@ class _DocumentCanvasState extends State<DocumentCanvas> {
   }
 
   @override
+  void didUpdateWidget(covariant DocumentCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Si cambió el mensaje de estado (p. ej. tras tool calls del agente IA),
+    // forzamos recarga del dibujo desde Rust.
+    if (oldWidget.mensajeEstado != widget.mensajeEstado) {
+      _refrescarDibujo();
+    }
+  }
+
+  @override
   void dispose() {
     _focusNode.dispose();
     super.dispose();

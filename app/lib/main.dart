@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -122,6 +124,7 @@ class _HomePageState extends State<HomePage> {
                     if (panelIAVisible)
                       SidePanelIA(
                         onCerrar: () => setState(() => panelIAVisible = false),
+                        onRepintar: _repintarCanvas,
                       ),
                   ],
                 ),
@@ -280,6 +283,35 @@ class _HomePageState extends State<HomePage> {
         _ejecutarComando('align.right', '');
       case 'panel_ia':
         setState(() => panelIAVisible = !panelIAVisible);
+      case 'ai.review':
+        _accionRevisarOrtografia();
+    }
+  }
+
+  /// Fase 6.4: revisa la ortografía del documento vía Rust (craft-proof)
+  /// y muestra el resumen en la barra de estado.
+  /// Repinta el canvas tras tool calls del agente IA (Fase 6.3):
+  /// cambia el mensaje de estado para que DocumentCanvas recargue el dibujo.
+  void _repintarCanvas() {
+    setState(() {
+      estadoRust = ' | documento actualizado por IA';
+    });
+  }
+
+  Future<void> _accionRevisarOrtografia() async {
+    try {
+      final json = await rust_api.revisarOrtografia();
+      final lista = jsonDecode(json) as List<dynamic>;
+      if (!mounted) return;
+      setState(() {
+        estadoRust = lista.isEmpty
+            ? 'Ortografía: sin errores'
+            : 'Ortografía: ${lista.length} error(es). Primero: '
+                '${lista[0]['palabra']} → ${(lista[0]['sugerencias'] as List).take(3).join(', ')}';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = 'Error revisando ortografía: $e');
     }
   }
 }
