@@ -110,3 +110,9 @@
 - PERO la pantalla física queda negra aunque uiautomator ve la UI: SurfaceFlinger muestra la capa visible con color{0,0,0,1} y fps=0.08; screencap sale 100% negro incluso en la app de Ajustes del sistema → NO es bug de UrquiOffice, es el renderizado gráfico de esta tablet bajo adb/PRoot (el framebuffer real no recibe frames).
 - Conclusión: la lógica Rust↔Flutter funciona (estado OK, sin undefined symbol); la verificación visual en pantalla física queda pendiente de probar la tablet sin adb (tocarla directo).
 - Sub-paso 5.4 pendiente: SAF para file.save/file.open .docx.
+
+## Fase 5.4 COMPLETADA (00:43Z) - guardar/abrir .docx vía SAF
+- Rust: file_guardar (wordcraft_docx::write directo, preserva negrita) + file_abrir (docx::read + set_document + relayout). Test fase54 con Session local aislada: guardar .docx con bold y reabrir → dibujo trae texto bold. 8/8 tests OK.
+- Hallazgos clave: (1) format.bold es toggle, usar {"value":true} para forzar; (2) file.save del engine puede escribir b=0 si el estado quedó par → guardamos directo con docx::write; (3) file.open abre "al lado" si la sesión ya está usada → usamos set_document directo; (4) la sesión global compartida entre tests paralelos causaba condiciones de carrera → tests de docx usan Session local.
+- FFI: fileGuardar/fileAbrir. Flutter: file_picker + SAF, botones Guardar/Abrir cableados. analyze 0 issues. Corrida CI disparada.
+- FASE 5 COMPLETA: criterio de éxito (escribir + negrita + guardar + reabrir = formato persiste) probado en tests Rust.
