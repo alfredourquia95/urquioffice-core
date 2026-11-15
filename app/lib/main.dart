@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,6 +74,39 @@ class _HomePageState extends State<HomePage> {
     }
     // Fase 6: arrancar el servidor IA local con la ruta real de la app.
     await _arrancarServidorIA();
+    // Fase 7.3: copiar los assets de fuentes a archivos reales y cargarlas en Rust.
+    await _cargarFuentes();
+  }
+
+  /// Fase 7.3: copia los .ttf de assets a la app documents y los instala en el
+  /// FontDb de wordcraft-fonts vía FFI. Devuelve el mensaje de estado.
+  Future<void> _cargarFuentes() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final nombres = <String>[
+        'LiberationSans-Regular.ttf',
+        'LiberationSans-Bold.ttf',
+        'LiberationSans-Italic.ttf',
+        'LiberationSans-BoldItalic.ttf',
+        'LiberationSerif-Regular.ttf',
+        'LiberationSerif-Bold.ttf',
+        'LiberationSerif-Italic.ttf',
+        'LiberationSerif-BoldItalic.ttf',
+      ];
+      final rutas = <String>[];
+      for (final n in nombres) {
+        final bytes = await rootBundle.load('assets/fonts/$n');
+        final file = File('${dir.path}/$n');
+        await file.writeAsBytes(bytes.buffer.asUint8List());
+        rutas.add(file.path);
+      }
+      final r = await rust_api.cargarFuentes(rutas: rutas);
+      if (!mounted) return;
+      setState(() => estadoRust = '$estadoRust | fuentes: $r');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = '$estadoRust | fuentes error: $e');
+    }
   }
 
   Future<void> _arrancarServidorIA() async {

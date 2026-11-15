@@ -130,3 +130,11 @@ pub fn extraer_tool_calls(texto: String) -> Result<String, String> {
         .collect();
     Ok(serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string()))
 }
+
+/// Carga fuentes .ttf (Fase 7.3) en el FontDb global de wordcraft-fonts.
+/// Devuelve cuántas se instalaron.
+pub fn cargar_fuentes(rutas: Vec<String>) -> Result<String, String> {
+    urquioffice_core::cargar_fuentes(&rutas)
+        .map(|n| format!("OK: {n} fuente(s) instaladas"))
+        .map_err(|e| e.to_string())
+}

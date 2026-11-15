@@ -59,3 +59,7 @@ Future<String> ejecutarToolCall({
 /// Extrae los tool calls {"tool","args"} embebidos en un texto del modelo.
 Future<String> extraerToolCalls({required String texto}) =>
     RustLib.instance.api.crateApiExtraerToolCalls(texto: texto);
+
+/// Carga fuentes .ttf (Fase 7.3) en el FontDb de wordcraft-fonts vía Rust.
+Future<String> cargarFuentes({required List<String> rutas}) =>
+    RustLib.instance.api.crateApiCargarFuentes(rutas: rutas);

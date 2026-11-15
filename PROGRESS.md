@@ -160,3 +160,11 @@
   (0100007F:7A69 en /proc/net/tcp) y GET /v1/models responde 200 con la lista
   de modelos de Venagate. El arranque vía FFI con la ruta real de la DB funciona.
 - Mejora menor: barra de estado con Expanded+semanticsLabel para depurar el estado.
+
+## 2026-11-15 — Fase 7.1–7.3 (inicio): fuentes Liberation en la app
+- 7.1/7.2: 8 TTF de Liberation Sans/Serif (2.1.5) en app/assets/fonts + pubspec.
+- 7.3: `cargar_fuentes(rutas)` en Rust vía `FontDb::global().install_font`
+  (idempotente, sin reemplazar bundled); FFI `cargarFuentes` (funcId 11, codec
+  Vec<String> añadido a mano en ambos lados). Dart copia los assets a files/
+  y los instala al arrancar. Test de error con ruta inválida pasa (15 tests).
+- flutter analyze 0 issues. Pendiente: 7.4 build release en CI.

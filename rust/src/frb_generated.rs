@@ -381,6 +381,40 @@ fn wire__crate__api__extraer_tool_calls_impl(
     )
 }
 
+fn wire__crate__api__cargar_fuentes_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "cargar_fuentes",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let rutas = <Vec<String> as SseDecode>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::cargar_fuentes(rutas)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+
 // Section: dart2rust
 
 impl SseDecode for String {
@@ -388,6 +422,19 @@ impl SseDecode for String {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <Vec<u8>>::sse_decode(deserializer);
         return String::from_utf8(inner).unwrap();
+    }
+}
+
+impl SseDecode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        if len_ < 0 { len_ = 0; }
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for _ in 0..len_ {
+            ans_.push(<String as SseDecode>::sse_decode(deserializer));
+        }
+        return ans_;
     }
 }
 
@@ -448,6 +495,7 @@ fn pde_ffi_dispatcher_primary_impl(
         8 => wire__crate__api__revisar_ortografia_impl(port, ptr, rust_vec_len, data_len),
         9 => wire__crate__api__ejecutar_tool_call_impl(port, ptr, rust_vec_len, data_len),
         10 => wire__crate__api__extraer_tool_calls_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__cargar_fuentes_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
