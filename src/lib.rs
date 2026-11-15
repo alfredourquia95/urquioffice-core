@@ -135,6 +135,48 @@ pub fn obtener_dibujo() -> Result<Vec<DrawLine>, CoreError> {
     extraer_dibujo(session)
 }
 
+/// Guarda el documento activo de la sesión global como .docx en `path` (Fase 5.4).
+/// Lo hacemos directo con wordcraft_docx::write sobre session.doc para garantizar
+/// que los estilos (negrita) se serialicen tal cual, y actualizamos session.path/dirty.
+pub fn file_guardar(path: &str) -> Result<serde_json::Value, CoreError> {
+    let mut guard = sesion()
+        .lock()
+        .map_err(|e| CoreError::Lock(e.to_string()))?;
+    let session = guard.as_mut().ok_or(CoreError::NoSession)?;
+    let bytes = wordcraft_docx::write(&session.doc)
+        .map_err(|e| CoreError::Command(format!("docx write: {e}")))?;
+    std::fs::write(path, &bytes).map_err(|e| CoreError::Command(format!("escribir {path}: {e}")))?;
+    session.path = Some(std::path::PathBuf::from(path));
+    session.dirty = false;
+    session.relayout();
+    Ok(serde_json::json!({
+        "saved": true,
+        "path": path,
+        "bytes": bytes.len(),
+    }))
+}
+
+/// Abre un .docx desde `path` y lo reemplaza como documento activo de la sesión (Fase 5.4).
+/// Estrategia: leer el archivo con wordcraft-docx y luego `Session::set_document`,
+/// así el documento abierto queda activo de verdad (file.open solo lo abre "al lado" si la sesión ya está usada).
+pub fn file_abrir(path: &str) -> Result<serde_json::Value, CoreError> {
+    let bytes = std::fs::read(path).map_err(|e| CoreError::Command(format!("leer {path}: {e}")))?;
+    let doc = wordcraft_docx::read(&bytes).map_err(|e| CoreError::Command(format!("docx inválido: {e}")))?;
+    let mut guard = sesion()
+        .lock()
+        .map_err(|e| CoreError::Lock(e.to_string()))?;
+    let session = guard.as_mut().ok_or(CoreError::NoSession)?;
+    session.set_document(doc);
+    session.path = Some(std::path::PathBuf::from(path));
+    session.relayout();
+    Ok(serde_json::json!({
+        "path": path,
+        "paragraphs": session.doc.paragraph_count(),
+        "words": session.doc.word_count(),
+        "reemplazado": true,
+    }))
+}
+
 /// Ejecuta la demo de la Fase 1:
 /// 1. Crea un documento vacío.
 /// 2. Inserta el párrafo "Hola UrquiOffice".
@@ -238,5 +280,42 @@ mod tests {
             matches!(args_malos, Err(CoreError::Args(_))),
             "args inválidos deben dar CoreError::Args: {args_malos:?}"
         );
+    }
+
+    #[test]
+    fn fase54_guardar_y_abrir_docx_preserva_formato() -> Result<(), Box<dyn std::error::Error>> {
+        // Sesión local aislada: no depende de la sesión global que otros tests (en paralelo)
+        // dejan con otro documento activo.
+        let mut ses = Session::new(Document::new());
+        let ins = ses.run("text.insert", &serde_json::json!({"text": "Documento de prueba Fase 5.4"}));
+        assert!(matches!(ins, Ok(_)), "text.insert local falló: {ins:?}");
+        let sel = ses.run("select.all", &serde_json::json!({}));
+        assert!(matches!(sel, Ok(_)), "select.all falló: {sel:?}");
+        // format.bold es toggle: con value=true forzamos negrita aunque ya lo estuviera.
+        let bold = ses.run("format.bold", &serde_json::json!({"value": true}));
+        assert!(matches!(bold, Ok(_)), "format.bold falló: {bold:?}");
+
+        // Guardar como .docx directo con wordcraft_docx::write.
+        let dir = std::env::temp_dir().join("urquioffice_test_fase54_local");
+        std::fs::create_dir_all(&dir)?;
+        let ruta = dir.join("prueba_fase54_local.docx");
+        let bytes = wordcraft_docx::write(&ses.doc).map_err(|e| CoreError::Command(e.to_string()))?;
+        std::fs::write(&ruta, &bytes).map_err(|e| CoreError::Command(e.to_string()))?;
+        assert!(ruta.metadata().map(|m| m.len() > 0).unwrap_or(false));
+
+        // Reabrir en otra sesión local y comprobar que el dibujo trae el texto en negrita.
+        let bytes2 = std::fs::read(&ruta).map_err(|e| CoreError::Command(e.to_string()))?;
+        let doc2 = wordcraft_docx::read(&bytes2).map_err(|e| CoreError::Command(e.to_string()))?;
+        let mut ses2 = Session::new(doc2);
+        let dibujo = extraer_dibujo(&mut ses2)?;
+        assert!(
+            dibujo.iter().any(|l| l.text.contains("Documento de prueba Fase 5.4") && l.bold),
+            "tras guardar+reabrir el dibujo debe traer el texto en negrita: {dibujo:?}"
+        );
+
+        // Limpieza (mejor esfuerzo).
+        let _ = std::fs::remove_file(&ruta);
+        let _ = std::fs::remove_dir(&dir);
+        Ok(())
     }
 }

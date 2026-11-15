@@ -60,3 +60,17 @@ pub fn obtener_dibujo() -> Result<String, String> {
         })
         .map_err(|e| e.to_string())
 }
+
+/// Guarda el documento activo como .docx en `path` (Fase 5.4, ruta vía SAF).
+pub fn file_guardar(path: String) -> Result<String, String> {
+    urquioffice_core::file_guardar(&path)
+        .map(|v| v.to_string())
+        .map_err(|e| e.to_string())
+}
+
+/// Abre un .docx desde `path` y lo carga como documento activo (Fase 5.4).
+pub fn file_abrir(path: String) -> Result<String, String> {
+    urquioffice_core::file_abrir(&path)
+        .map(|v| v.to_string())
+        .map_err(|e| e.to_string())
+}

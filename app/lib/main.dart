@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
 import 'src/rust/api.dart' as rust_api;
 import 'src/rust/frb_generated.dart';
 import 'widgets/ribbon.dart';
@@ -182,13 +183,52 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _accionGuardar() {
-    // Fase 5.4 (SAF) pendiente: por ahora marcamos estado.
-    setState(() => estadoRust = 'Guardar: pendiente SAF (fase 5.4)');
+  Future<void> _accionGuardar() async {
+    // Fase 5.4: SAF para elegir dónde guardar el .docx
+    try {
+      final resultado = await FilePicker.platform.saveFile(
+        dialogTitle: 'Guardar documento',
+        fileName: 'Documento1.docx',
+        type: FileType.custom,
+        allowedExtensions: ['docx'],
+      );
+      if (resultado == null) {
+        if (mounted) setState(() => estadoRust = 'Guardar cancelado');
+        return;
+      }
+      final r = await rust_api.fileGuardar(path: resultado);
+      if (!mounted) return;
+      setState(() => estadoRust = 'Guardado: $r');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = 'Error al guardar: $e');
+    }
   }
 
-  void _accionAbrir() {
-    setState(() => estadoRust = 'Abrir: pendiente SAF (fase 5.4)');
+  Future<void> _accionAbrir() async {
+    // Fase 5.4: SAF para elegir el .docx a abrir
+    try {
+      final resultado = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Abrir documento',
+        type: FileType.custom,
+        allowedExtensions: ['docx'],
+      );
+      if (resultado == null || resultado.files.isEmpty) {
+        if (mounted) setState(() => estadoRust = 'Abrir cancelado');
+        return;
+      }
+      final path = resultado.files.single.path;
+      if (path == null) {
+        if (mounted) setState(() => estadoRust = 'Ruta no disponible (usa almacenamiento propio)');
+        return;
+      }
+      final r = await rust_api.fileAbrir(path: path);
+      if (!mounted) return;
+      setState(() => estadoRust = 'Abierto: $r');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = 'Error al abrir: $e');
+    }
   }
 
   void _accionNegrita() => _ejecutarComando('format.bold', '');

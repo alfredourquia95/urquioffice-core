@@ -25,3 +25,11 @@ Future<String> executeCommand({
 /// Devuelve la lista de dibujo actual como JSON: [{x, y, text, bold}, ...].
 /// Flutter la usa para repintar el DocumentCanvas.
 Future<String> obtenerDibujo() => RustLib.instance.api.crateApiObtenerDibujo();
+
+/// Guarda el documento activo como .docx en `path` (Fase 5.4, ruta vía SAF).
+Future<String> fileGuardar({required String path}) =>
+    RustLib.instance.api.crateApiFileGuardar(path: path);
+
+/// Abre un .docx desde `path` y lo carga como documento activo (Fase 5.4).
+Future<String> fileAbrir({required String path}) =>
+    RustLib.instance.api.crateApiFileAbrir(path: path);
