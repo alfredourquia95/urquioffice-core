@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 90
 
     env:
-            CRAFT_PROOF_EMBED: "en,es,de,pl,pt,it,ru"
+      CRAFT_PROOF_EMBED: "en,es,de,pl,pt,it,ru"
       FLUTTER_VERSION: "3.47.9"
       NDK_VERSION: "28.2.13676358"
       RUST_TOOLCHAIN: "stable"
