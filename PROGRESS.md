@@ -202,3 +202,10 @@
 - Puerto 31337 en escucha (0100007F:7A69). Botón "Clave IA" presente en pestaña IA.
 - Fix menor: estadoNucleo ahora se considera OK si contiene 'motor WordCraft OK'
   (antes esperaba prefijo 'OK' y marcaba 'Error desde Rust' aunque todo estuviera bien).
+
+## 2026-11-15 — System prompt con tool calling para el critère de Fase 6
+- El system prompt del chat ahora instruye al modelo a emitir bloques
+  {"tool","args"} con los comandos del engine (select.all, format.bold, etc.),
+  con ejemplo concreto. El flujo ya está cableado: extraerToolCalls →
+  ejecutarToolCall → onRepintar → canvas recarga obtenerDibujo().
+- flutter analyze 0 issues.
