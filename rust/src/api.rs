@@ -138,3 +138,15 @@ pub fn cargar_fuentes(rutas: Vec<String>) -> Result<String, String> {
         .map(|n| format!("OK: {n} fuente(s) instaladas"))
         .map_err(|e| e.to_string())
 }
+
+/// Guarda una clave de API de Venagate en la DB cifrada (Fase 6.5).
+pub fn guardar_api_key(
+    ruta_db: String,
+    secreto: String,
+    nombre: String,
+    clave: String,
+) -> Result<String, String> {
+    urquioffice_core::guardar_api_key(&ruta_db, &secreto, &nombre, &clave)
+        .map(|id| format!("OK: clave guardada con id {id}"))
+        .map_err(|e| e.to_string())
+}

@@ -63,3 +63,17 @@ Future<String> extraerToolCalls({required String texto}) =>
 /// Carga fuentes .ttf (Fase 7.3) en el FontDb de wordcraft-fonts vía Rust.
 Future<String> cargarFuentes({required List<String> rutas}) =>
     RustLib.instance.api.crateApiCargarFuentes(rutas: rutas);
+
+/// Guarda una clave de API de Venagate en la DB cifrada (Fase 6.5).
+Future<String> guardarApiKey({
+  required String rutaDb,
+  required String secreto,
+  required String nombre,
+  required String clave,
+}) =>
+    RustLib.instance.api.crateApiGuardarApiKey(
+      rutaDb: rutaDb,
+      secreto: secreto,
+      nombre: nombre,
+      clave: clave,
+    );

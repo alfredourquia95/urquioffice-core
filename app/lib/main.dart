@@ -321,8 +321,54 @@ class _HomePageState extends State<HomePage> {
         _ejecutarComando('align.right', '');
       case 'panel_ia':
         setState(() => panelIAVisible = !panelIAVisible);
+      case 'ai.configurar':
+        _dialogoApiKey();
       case 'ai.review':
         _accionRevisarOrtografia();
+    }
+  }
+
+  /// Fase 6.5: diálogo para pegar la clave de API de Venagate y guardarla
+  /// cifrada en la DB local vía FFI.
+  Future<void> _dialogoApiKey() async {
+    final controller = TextEditingController();
+    final r = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Configurar clave de IA'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Clave de Venagate (sk-...)',
+            hintText: 'sk-...',
+          ),
+          obscureText: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (r != true || !mounted) return;
+    final clave = controller.text.trim();
+    if (clave.isEmpty) return;
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final res = await rust_api.guardarApiKey(
+        rutaDb: '${dir.path}/urquioffice.db',
+        secreto: 'urquioffice-local-secret',
+        nombre: 'venagate',
+        clave: clave,
+      );
+      if (!mounted) return;
+      setState(() => estadoRust = '$estadoRust | clave: $res');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => estadoRust = '$estadoRust | error clave: $e');
     }
   }
 

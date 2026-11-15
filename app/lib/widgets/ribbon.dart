@@ -210,6 +210,7 @@ class _RibbonState extends State<Ribbon> {
         _BotonRibbon(Icons.auto_awesome, 'Resumir', 'ai.summarize'),
         _BotonRibbon(Icons.translate, 'Traducir', 'ai.translate'),
         _BotonRibbon(Icons.spellcheck, 'Revisar', 'ai.review'),
+        _BotonRibbon(Icons.vpn_key, 'Clave IA', 'ai.configurar'),
       ]),
       _GrupoBotones(null, [
         _BotonRibbon(Icons.chat_bubble, 'Abrir panel IA', 'panel_ia'),

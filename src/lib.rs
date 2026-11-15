@@ -200,6 +200,16 @@ pub fn cargar_fuentes(rutas: &[String]) -> Result<usize, CoreError> {
     Ok(total)
 }
 
+
+/// Guarda una clave de API de Venagate en la DB cifrada (Fase 6.5).
+/// Si la DB no está abierta, la abre en  con .
+pub fn guardar_api_key(ruta_db: &str, secreto: &str, nombre: &str, clave: &str) -> Result<i64, CoreError> {
+    let db = crate::db::Database::abrir(std::path::Path::new(ruta_db), secreto)
+        .map_err(|e| CoreError::Command(format!("abrir db: {e}")))?;
+    db.guardar_api_key(nombre, clave)
+        .map_err(|e| CoreError::Command(format!("guardar key: {e}")))
+}
+
 /// Estado del servidor de IA local (Fase 6): arrancado una vez en segundo plano.
 static SERVIDOR_IA: OnceLock<std::sync::Mutex<bool>> = OnceLock::new();
 

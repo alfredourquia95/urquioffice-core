@@ -111,6 +111,13 @@ abstract class RustLibApi extends BaseApi {
   Future<String> crateApiExtraerToolCalls({required String texto});
 
   Future<String> crateApiCargarFuentes({required List<String> rutas});
+
+  Future<String> crateApiGuardarApiKey({
+    required String rutaDb,
+    required String secreto,
+    required String nombre,
+    required String clave,
+  });
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -445,6 +452,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiCargarFuentesConstMeta => const TaskConstMeta(
     debugName: "cargar_fuentes",
     argNames: ["rutas"],
+  );
+
+  @override
+  Future<String> crateApiGuardarApiKey({
+    required String rutaDb,
+    required String secreto,
+    required String nombre,
+    required String clave,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(rutaDb, serializer);
+          sse_encode_String(secreto, serializer);
+          sse_encode_String(nombre, serializer);
+          sse_encode_String(clave, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiGuardarApiKeyConstMeta,
+        argValues: [rutaDb, secreto, nombre, clave],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiGuardarApiKeyConstMeta => const TaskConstMeta(
+    debugName: "guardar_api_key",
+    argNames: ["rutaDb", "secreto", "nombre", "clave"],
   );
 
   @protected

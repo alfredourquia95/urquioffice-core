@@ -182,3 +182,11 @@
 - 7.2 extra: fuentes declaradas también como `fonts:` en pubspec (familia
   "Liberation Sans"/"Liberation Serif") y el canvas usa fontFamily: 'Liberation Sans'.
 - flutter analyze 0 issues; 15/15 tests Rust.
+
+## 2026-11-15 — Fase 6.5: configurar clave de IA desde la UI
+- `guardar_api_key(ruta_db, secreto, nombre, clave)` en el núcleo (DB cifrada
+  AES-256-GCM) + FFI `guardarApiKey` (funcId 12, devuelve String para evitar
+  codecs i64). Botón "Clave IA" en la pestaña IA abre diálogo, guarda la clave.
+- Verificado en tablet: el servidor responde "no hay claves de API activas" si
+  no hay ninguna; con la clave guardada el chat debe responder de verdad.
+- flutter analyze 0 issues; 15/15 tests Rust.
