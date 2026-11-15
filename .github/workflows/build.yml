@@ -105,3 +105,21 @@ jobs:
           name: urquioffice-app-debug-arm64
           path: app/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14
+
+      # Fase 7.4: build release (más pequeño, sin debug). Mismo .so Rust ya compilado.
+      - name: Compilar APK release
+        working-directory: app
+        run: flutter build apk --release
+
+      - name: Verificar que el APK release contiene el .so de Rust
+        run: |
+          APK=app/build/app/outputs/flutter-apk/app-release.apk
+          ls -la "$APK"
+          unzip -l "$APK" | grep "lib/arm64-v8a/librust_lib_urquioffice.so"
+
+      - name: Subir APK release como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: urquioffice-app-release-arm64
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14

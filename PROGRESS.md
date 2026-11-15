@@ -168,3 +168,9 @@
   Vec<String> añadido a mano en ambos lados). Dart copia los assets a files/
   y los instala al arrancar. Test de error con ruta inválida pasa (15 tests).
 - flutter analyze 0 issues. Pendiente: 7.4 build release en CI.
+
+## 2026-11-15 — Fase 7.4: build release en CI
+- build.yml ahora compila también `flutter build apk --release` y publica el
+  artefacto `urquioffice-app-release-arm64` (verifica que trae el .so Rust).
+- Criterio de Fase 7 pendiente de verificación en tablet con el APK release:
+  fuentes Liberation cargadas (estado muestra "fuentes: OK: 8...") y app sin internet salvo IA.
