@@ -190,3 +190,8 @@
 - Verificado en tablet: el servidor responde "no hay claves de API activas" si
   no hay ninguna; con la clave guardada el chat debe responder de verdad.
 - flutter analyze 0 issues; 15/15 tests Rust.
+
+## 2026-11-15 — Fix SAF saveFile (file_picker exige bytes en Android)
+- En tablet, `FilePicker.platform.saveFile` sin `bytes` lanza "Bytes are required
+  on Android & iOS". Fix: pasar `bytes: utf8.encode(' ')`; el contenido real lo
+  escribe Rust vía file_guardar. flutter analyze 0 issues.

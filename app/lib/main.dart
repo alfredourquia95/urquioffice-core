@@ -253,6 +253,7 @@ class _HomePageState extends State<HomePage> {
         fileName: 'Documento1.docx',
         type: FileType.custom,
         allowedExtensions: ['docx'],
+        bytes: utf8.encode(' '),
       );
       if (resultado == null) {
         if (mounted) setState(() => estadoRust = 'Guardar cancelado');
